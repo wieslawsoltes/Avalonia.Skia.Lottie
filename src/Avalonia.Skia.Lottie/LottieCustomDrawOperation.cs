@@ -1,20 +1,16 @@
-﻿using System.Diagnostics;
-using Avalonia.Platform;
+﻿using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
-using Avalonia.Skia;
 using SkiaSharp;
 
 namespace Avalonia.Skia.Lottie;
 
 internal class LottieCustomDrawOperation : ICustomDrawOperation
 {
-    private readonly SkiaSharp.Skottie.Animation _animation;
-    private readonly Stopwatch _watch;
+    private readonly Lottie _lottie;
 
-    public LottieCustomDrawOperation(Rect bounds, SkiaSharp.Skottie.Animation animation, Stopwatch watch)
+    public LottieCustomDrawOperation(Rect bounds, Lottie lottie)
     {
-        _animation = animation;
-        _watch = watch;
+        _lottie = lottie;
         Bounds = bounds;
     }
 
@@ -36,17 +32,28 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
             return;
         }
 
-        canvas.Save();
-
-        _animation.SeekFrameTime((float)_watch.Elapsed.TotalSeconds);
-
-        if (_watch.Elapsed.TotalSeconds > _animation.Duration)
+        lock (_lottie._sync)
         {
-            _watch.Restart();
+            canvas.Save();
+
+            var animation = _lottie._animation;
+            if (animation is null)
+            {
+                return;
+            }
+
+            var watch = _lottie._watch;
+
+            animation.SeekFrameTime((float)watch.Elapsed.TotalSeconds);
+
+            if (watch.Elapsed.TotalSeconds > animation.Duration)
+            {
+                watch.Restart();
+            }
+
+            animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
+
+            canvas.Restore();
         }
-
-        _animation.Render(canvas, new SKRect(0, 0, _animation.Size.Width, _animation.Size.Height));
-
-        canvas.Restore();
     }
 }

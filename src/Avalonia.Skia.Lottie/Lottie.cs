@@ -17,10 +17,11 @@ namespace Avalonia.Skia.Lottie;
 /// </summary>
 public class Lottie : Control, IAffectsRender
 {
-    private readonly Stopwatch _watch = new ();
+    internal readonly Stopwatch _watch = new ();
+    internal SkiaSharp.Skottie.Animation? _animation;
+    internal readonly object _sync = new ();
     private DispatcherTimer? _timer;
     private readonly Uri _baseUri;
-    private SkiaSharp.Skottie.Animation? _animation;
     private bool _enableCache;
     private Dictionary<string, SkiaSharp.Skottie.Animation>? _cache;
 
@@ -181,8 +182,7 @@ public class Lottie : Control, IAffectsRender
             context.Custom(
                 new LottieCustomDrawOperation(
                     new Rect(0, 0, bounds.Width, bounds.Height),
-                    _animation,
-                    _watch));
+                    this));
         }
     }
 
@@ -255,8 +255,12 @@ public class Lottie : Control, IAffectsRender
     {
         if (path is null)
         {
-            _animation?.Dispose();
-            _animation = null;
+            lock (_sync)
+            {
+                _animation?.Dispose();
+                _animation = null;
+            }
+
             DisposeCache();
             return;
         }
@@ -264,13 +268,17 @@ public class Lottie : Control, IAffectsRender
         if (_enableCache && _cache is { } && _cache.TryGetValue(path, out var animation))
         {
             _animation = animation;
+            Start();
             return;
         }
 
         if (!_enableCache)
         {
-            _animation?.Dispose();
-            _animation = null;
+            lock (_sync)
+            {
+                _animation?.Dispose();
+                _animation = null;
+            }
         }
 
         try
@@ -281,23 +289,7 @@ public class Lottie : Control, IAffectsRender
                 return;
             }
 
-            _timer?.Stop();
-            _timer = null;
-
-            _timer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))
-            };
-
-            _timer.Tick += (_, _) => 
-            {
-                InvalidateVisual();
-            };
-
-            _timer.Start();
-
-            _watch.Reset();
-            _watch.Start();
+            Start();
 
             if (_enableCache && _cache is { } && _animation is { })
             {
@@ -311,6 +303,29 @@ public class Lottie : Control, IAffectsRender
         }
     }
 
+    private void Start()
+    {
+        if (_animation is null)
+        {
+            return;
+        }
+
+        _timer?.Stop();
+        _timer = null;
+
+        _timer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))};
+
+        _timer.Tick += (_, _) =>
+        {
+            InvalidateVisual();
+        };
+
+        _timer.Start();
+
+        _watch.Reset();
+        _watch.Start();
+    }
+
     private void DisposeCache()
     {
         if (_cache is null)
@@ -318,15 +333,18 @@ public class Lottie : Control, IAffectsRender
             return;
         }
 
-        foreach (var kvp in _cache)
+        lock (_sync)
         {
-            if (kvp.Value != _animation)
+            foreach (var kvp in _cache)
             {
-                kvp.Value.Dispose();
+                if (kvp.Value != _animation)
+                {
+                    kvp.Value.Dispose();
+                }
             }
-        }
 
-        _cache = null;
+            _cache = null;
+        }
     }
 
     /// <summary>
