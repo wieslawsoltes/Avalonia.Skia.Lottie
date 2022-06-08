@@ -203,6 +203,7 @@ public class Lottie : Control, IAffectsRender
             var enableCache = change.NewValue.GetValueOrDefault<bool>();
             if (enableCache == false)
             {
+                Stop();
                 DisposeCache();
             }
             else
@@ -256,6 +257,7 @@ public class Lottie : Control, IAffectsRender
         {
             lock (_sync)
             {
+                Stop();
                 _animation?.Dispose();
                 _animation = null;
             }
@@ -266,6 +268,7 @@ public class Lottie : Control, IAffectsRender
 
         if (_enableCache && _cache is { } && _cache.TryGetValue(path, out var animation))
         {
+            Stop();
             _animation = animation;
             Start();
             return;
@@ -275,6 +278,7 @@ public class Lottie : Control, IAffectsRender
         {
             lock (_sync)
             {
+                Stop();
                 _animation?.Dispose();
                 _animation = null;
             }
@@ -282,6 +286,7 @@ public class Lottie : Control, IAffectsRender
 
         try
         {
+            Stop();
             _animation = Load(path, _baseUri);
             if (_animation is null)
             {
@@ -302,6 +307,13 @@ public class Lottie : Control, IAffectsRender
         }
     }
 
+    private void Stop()
+    {
+        _timer?.Stop();
+        _timer = null;
+        _watch.Reset();
+    }
+
     private void Start()
     {
         if (_animation is null)
@@ -309,19 +321,18 @@ public class Lottie : Control, IAffectsRender
             return;
         }
 
-        _timer?.Stop();
-        _timer = null;
-
-        _timer = new DispatcherTimer {Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))};
+        _timer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))
+        };
 
         _timer.Tick += (_, _) =>
         {
+            _animation
             InvalidateVisual();
         };
 
         _timer.Start();
-
-        _watch.Reset();
         _watch.Start();
     }
 
