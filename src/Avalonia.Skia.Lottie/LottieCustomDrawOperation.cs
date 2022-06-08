@@ -42,13 +42,13 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
                 return;
             }
 
-            var watch = _lottie._watch;
-
-            animation.SeekFrameTime((float)watch.Elapsed.TotalSeconds);
-
-            if (watch.Elapsed.TotalSeconds > animation.Duration)
+            if (_lottie._isRunning)
             {
-                if (_lottie._isRunning)
+                var watch = _lottie._watch;
+
+                animation.SeekFrameTime((float)watch.Elapsed.TotalSeconds);
+ 
+                if (watch.Elapsed.TotalSeconds > animation.Duration)
                 {
                     watch.Restart();
                     _lottie._count++;
