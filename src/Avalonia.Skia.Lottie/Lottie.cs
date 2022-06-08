@@ -214,9 +214,9 @@ public class Lottie : Control, IAffectsRender
 
     private static SkiaSharp.Skottie.Animation? Load(Stream stream)
     {
-        using var fileStream = new SKManagedStream(stream);
+        using var managedStream = new SKManagedStream(stream);
 
-        if (SkiaSharp.Skottie.Animation.TryCreate(fileStream, out var animation))
+        if (SkiaSharp.Skottie.Animation.TryCreate(managedStream, out var animation))
         {
             animation.Seek(0);
             Debug.WriteLine($"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
@@ -234,20 +234,19 @@ public class Lottie : Control, IAffectsRender
         var uri = path.StartsWith("/") ? new Uri(path, UriKind.Relative) : new Uri(path, UriKind.RelativeOrAbsolute);
         if (uri.IsAbsoluteUri && uri.IsFile)
         {
-            using var stream = File.OpenRead(uri.LocalPath);
-
-            return Load(stream);
+            using var fileStream = File.OpenRead(uri.LocalPath);
+            return Load(fileStream);
         }
         else
         {
             var loader = AvaloniaLocator.Current.GetService<IAssetLoader>();
-            using var stream = loader?.Open(uri, baseUri);
-            if (stream is null)
+            using var assetStream = loader?.Open(uri, baseUri);
+            if (assetStream is null)
             {
                 return default;
             }
 
-            return Load(stream);
+            return Load(assetStream);
         }
     }
     
