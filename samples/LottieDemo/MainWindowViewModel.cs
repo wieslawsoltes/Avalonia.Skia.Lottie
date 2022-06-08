@@ -20,7 +20,8 @@ public partial class MainWindowViewModel
 
         _assets = assetLoader?
             .GetAssets(new Uri("avares://LottieDemo/Assets"), new Uri("avares://LottieDemo/"))
-            .Select(x=>x.AbsoluteUri)
+            .Where(x => x.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            .Select(x=> x.AbsoluteUri)
             .ToList();
 
         _selectedAsset = _assets?.FirstOrDefault(x => x.Contains("LottieLogo1.json"));
