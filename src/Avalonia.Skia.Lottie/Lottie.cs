@@ -381,6 +381,10 @@ public class Lottie : Control, IAffectsRender
             {
                 InvalidateVisual();
             }
+            else
+            {
+                _timer.Stop();
+            }
         };
 
         _timer.Start();
