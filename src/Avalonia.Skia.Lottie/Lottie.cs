@@ -21,9 +21,16 @@ public class Lottie : Control, IAffectsRender
     internal SkiaSharp.Skottie.Animation? _animation;
     internal readonly object _sync = new ();
     private DispatcherTimer? _timer;
+    internal int _count;
+    internal bool _isRunning;
     private readonly Uri _baseUri;
     private bool _enableCache;
     private Dictionary<string, SkiaSharp.Skottie.Animation>? _cache;
+
+    /// <summary>
+    /// Infinite number of repeats.
+    /// </summary>
+    public const int Infinity = -1;
 
     /// <summary>
     /// Defines the <see cref="Path"/> property.
@@ -52,6 +59,12 @@ public class Lottie : Control, IAffectsRender
         AvaloniaProperty.RegisterDirect<Lottie, bool>(nameof(EnableCache),
             o => o.EnableCache,
             (o, v) => o.EnableCache = v);
+
+    /// <summary>
+    /// Defines the <see cref="RepeatCount"/> property.
+    /// </summary>
+    public static readonly StyledProperty<int> RepeatCountProperty = 
+        AvaloniaProperty.Register<Lottie, int>(nameof(RepeatCount), Infinity);
 
     /// <inheritdoc/>
     public event EventHandler? Invalidated;
@@ -91,6 +104,15 @@ public class Lottie : Control, IAffectsRender
     {
         get { return _enableCache; }
         set { SetAndRaise(EnableCacheProperty, ref _enableCache, value); }
+    }
+
+    /// <summary>
+    ///  Sets how many times the animation should be repeated.
+    /// </summary>
+    public int RepeatCount
+    {
+        get => GetValue(RepeatCountProperty);
+        set => SetValue(RepeatCountProperty, value);
     }
 
     static Lottie()
@@ -148,7 +170,7 @@ public class Lottie : Control, IAffectsRender
 
     public override void Render(DrawingContext context)
     {
-        if (_animation is null)
+        if (_animation is null || !_isRunning)
         {
             return;
         }
@@ -210,6 +232,12 @@ public class Lottie : Control, IAffectsRender
             {
                 _cache = new Dictionary<string, SkiaSharp.Skottie.Animation>();
             }
+        }
+
+        if (change.Property == RepeatCountProperty)
+        {
+            Stop();
+            Start();
         }
     }
 
@@ -309,9 +337,21 @@ public class Lottie : Control, IAffectsRender
 
     private void Stop()
     {
+        _isRunning = false;
         _timer?.Stop();
         _timer = null;
         _watch.Reset();
+        _count = 0;
+    }
+
+    private void InvalidateRepeatCount()
+    {
+        if (RepeatCount == 0 || (RepeatCount > 0 && _count >= RepeatCount))
+        {
+            _isRunning = false;
+            _timer?.Stop();
+            _watch.Stop();
+        }
     }
 
     private void Start()
@@ -321,6 +361,13 @@ public class Lottie : Control, IAffectsRender
             return;
         }
 
+        if (RepeatCount == 0)
+        {
+            return;
+        }
+
+        _count = 0;
+
         _timer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))
@@ -328,12 +375,17 @@ public class Lottie : Control, IAffectsRender
 
         _timer.Tick += (_, _) =>
         {
-            _animation
-            InvalidateVisual();
+            InvalidateRepeatCount();
+
+            if (_isRunning)
+            {
+                InvalidateVisual();
+            }
         };
 
         _timer.Start();
         _watch.Start();
+        _isRunning = true;
     }
 
     private void DisposeCache()

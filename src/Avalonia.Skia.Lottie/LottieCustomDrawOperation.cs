@@ -48,7 +48,11 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
 
             if (watch.Elapsed.TotalSeconds > animation.Duration)
             {
-                watch.Restart();
+                if (_lottie._isRunning)
+                {
+                    watch.Restart();
+                    _lottie._count++;
+                }
             }
 
             animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
