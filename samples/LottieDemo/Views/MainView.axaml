@@ -12,7 +12,7 @@
   </Design.DataContext>
   <Grid RowDefinitions="*, Auto" Margin="10">
     <Viewbox Grid.Row="0">
-      <Lottie Name="Lottie" Path="{Binding SelectedAsset.Path}" RepeatCount="-1" />
+      <Lottie Name="Lottie" Path="{Binding SelectedAsset.Path, FallbackValue={x:Null}}" RepeatCount="-1" />
     </Viewbox>
     <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1">
       <ComboBox Margin="0,10,0,0"
