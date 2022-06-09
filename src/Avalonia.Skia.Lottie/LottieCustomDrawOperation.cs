@@ -51,11 +51,11 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
                     watch.Restart();
                     _lottie._count++;
                 }
-            }
 
-            canvas.Save();
-            animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
-            canvas.Restore();
+                canvas.Save();
+                animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
+                canvas.Restore();
+            }
         }
     }
 }
