@@ -18,6 +18,7 @@ public class Lottie : Control, IAffectsRender
 {
     private readonly Stopwatch _watch = new ();
     private SkiaSharp.Skottie.Animation? _animation;
+    private SkiaSharp.SceneGraph.InvalidationController? _ic;
     private readonly object _sync = new ();
     private DispatcherTimer? _timer;
     private int _repeatCount;
@@ -287,6 +288,9 @@ public class Lottie : Control, IAffectsRender
             Stop();
             _animation?.Dispose();
             _animation = null;
+            _ic?.End();
+            _ic?.Dispose();
+            _ic = null;
         }
     }
 
@@ -365,6 +369,8 @@ public class Lottie : Control, IAffectsRender
         if (_watch.Elapsed.TotalSeconds > _animation.Duration)
         {
             _watch.Restart();
+            _ic?.End();
+            _ic?.Begin();
             _count++;
         }
 
@@ -381,6 +387,14 @@ public class Lottie : Control, IAffectsRender
                 return;
             }
 
+            if (_ic is null)
+            {
+                _ic = new SkiaSharp.SceneGraph.InvalidationController();
+                _ic.Begin();
+            }
+
+            var ic = _ic;
+
             if (_repeatCount == 0)
             {
                 return;
@@ -392,11 +406,20 @@ public class Lottie : Control, IAffectsRender
                 t = (float)animation.Duration;
             }
 
-            animation.SeekFrameTime(t);
- 
+            var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
+
+            animation.SeekFrameTime(t, ic);
+
+            // Debug.WriteLine($"dst: {dst}, ic.Bounds: {ic.Bounds}");
+
             canvas.Save();
-            animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
+
+            animation.Render(canvas, dst);
+            // canvas.DrawRect(ic.Bounds, new SKPaint { Color = SKColors.Magenta, Style = SKPaintStyle.Stroke, StrokeWidth = 1 });
+
             canvas.Restore();
+
+            ic.Reset();
         }
     }
 }
