@@ -1,5 +1,7 @@
 # Avalonia.Skia.Lottie
 
+[![CI](https://github.com/wieslawsoltes/Avalonia.Skia.Lottie/actions/workflows/build.yml/badge.svg)](https://github.com/wieslawsoltes/Avalonia.Skia.Lottie/actions/workflows/build.yml)
+
 [![NuGet](https://img.shields.io/nuget/v/Avalonia.Skia.Lottie.svg)](https://www.nuget.org/packages/Avalonia.Skia.Lottie)
 [![NuGet](https://img.shields.io/nuget/dt/Avalonia.Skia.Lottie.svg)](https://www.nuget.org/packages/Avalonia.Skia.Lottie)
 
