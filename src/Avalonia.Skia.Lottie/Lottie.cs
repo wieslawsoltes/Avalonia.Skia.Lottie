@@ -24,8 +24,6 @@ public class Lottie : Control, IAffectsRender
     internal int _count;
     internal bool _isRunning;
     private readonly Uri _baseUri;
-    private bool _enableCache;
-    private Dictionary<string, SkiaSharp.Skottie.Animation>? _cache;
 
     /// <summary>
     /// Infinite number of repeats.
@@ -51,14 +49,6 @@ public class Lottie : Control, IAffectsRender
         AvaloniaProperty.Register<Lottie, StretchDirection>(
             nameof(StretchDirection),
             StretchDirection.Both);
-
-    /// <summary>
-    /// Defines the <see cref="EnableCache"/> property.
-    /// </summary>
-    public static readonly DirectProperty<Lottie, bool> EnableCacheProperty =
-        AvaloniaProperty.RegisterDirect<Lottie, bool>(nameof(EnableCache),
-            o => o.EnableCache,
-            (o, v) => o.EnableCache = v);
 
     /// <summary>
     /// Defines the <see cref="RepeatCount"/> property.
@@ -95,15 +85,6 @@ public class Lottie : Control, IAffectsRender
     {
         get { return GetValue(StretchDirectionProperty); }
         set { SetValue(StretchDirectionProperty, value); }
-    }
-
-    /// <summary>
-    /// Gets or sets a value controlling whether the loaded images are cached.
-    /// </summary>
-    public bool EnableCache
-    {
-        get { return _enableCache; }
-        set { SetAndRaise(EnableCacheProperty, ref _enableCache, value); }
     }
 
     /// <summary>
@@ -151,7 +132,6 @@ public class Lottie : Control, IAffectsRender
             : default;
 
         return Stretch.CalculateSize(availableSize, sourceSize, StretchDirection);
-
     }
 
     protected override Size ArrangeOverride(Size finalSize)
@@ -220,20 +200,6 @@ public class Lottie : Control, IAffectsRender
             RaiseInvalidated(EventArgs.Empty);
         }
 
-        if (change.Property == EnableCacheProperty)
-        {
-            var enableCache = change.NewValue.GetValueOrDefault<bool>();
-            if (enableCache == false)
-            {
-                Stop();
-                DisposeCache();
-            }
-            else
-            {
-                _cache = new Dictionary<string, SkiaSharp.Skottie.Animation>();
-            }
-        }
-
         if (change.Property == RepeatCountProperty)
         {
             Stop();
@@ -241,24 +207,33 @@ public class Lottie : Control, IAffectsRender
         }
     }
 
-    private static SkiaSharp.Skottie.Animation? Load(Stream stream)
+    /// <summary>
+    /// Raises the <see cref="Invalidated"/> event.
+    /// </summary>
+    /// <param name="e">The event args.</param>
+    protected void RaiseInvalidated(EventArgs e) => Invalidated?.Invoke(this, e);
+
+    private SkiaSharp.Skottie.Animation? Load(Stream stream)
     {
         using var managedStream = new SKManagedStream(stream);
 
         if (SkiaSharp.Skottie.Animation.TryCreate(managedStream, out var animation))
         {
             animation.Seek(0);
-            Debug.WriteLine($"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
+
+            Logger
+                .TryGet(LogEventLevel.Information, LogArea.Control)?
+                .Log(this, $"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
         }
         else
         {
-            Debug.WriteLine($"Failed to load animation.");
+            Logger.TryGet(LogEventLevel.Warning, LogArea.Control)?.Log(this, "Failed to load animation.");
         }
-            
+
         return animation;
     }
 
-    private static SkiaSharp.Skottie.Animation? Load(string path, Uri? baseUri)
+    private SkiaSharp.Skottie.Animation? Load(string path, Uri? baseUri)
     {
         var uri = path.StartsWith("/") ? new Uri(path, UriKind.Relative) : new Uri(path, UriKind.RelativeOrAbsolute);
         if (uri.IsAbsoluteUri && uri.IsFile)
@@ -266,55 +241,30 @@ public class Lottie : Control, IAffectsRender
             using var fileStream = File.OpenRead(uri.LocalPath);
             return Load(fileStream);
         }
-        else
-        {
-            var loader = AvaloniaLocator.Current.GetService<IAssetLoader>();
-            using var assetStream = loader?.Open(uri, baseUri);
-            if (assetStream is null)
-            {
-                return default;
-            }
 
-            return Load(assetStream);
+        var loader = AvaloniaLocator.Current.GetService<IAssetLoader>();
+        using var assetStream = loader?.Open(uri, baseUri);
+        if (assetStream is null)
+        {
+            return default;
         }
+
+        return Load(assetStream);
     }
-    
+
     private void Load(string? path)
     {
         if (path is null)
         {
-            lock (_sync)
-            {
-                Stop();
-                _animation?.Dispose();
-                _animation = null;
-            }
+            DisposeImpl();
 
-            DisposeCache();
             return;
         }
 
-        if (_enableCache && _cache is { } && _cache.TryGetValue(path, out var animation))
-        {
-            Stop();
-            _animation = animation;
-            Start();
-            return;
-        }
-
-        if (!_enableCache)
-        {
-            lock (_sync)
-            {
-                Stop();
-                _animation?.Dispose();
-                _animation = null;
-            }
-        }
+        DisposeImpl();
 
         try
         {
-            Stop();
             _animation = Load(path, _baseUri);
             if (_animation is null)
             {
@@ -322,11 +272,6 @@ public class Lottie : Control, IAffectsRender
             }
 
             Start();
-
-            if (_enableCache && _cache is { } && _animation is { })
-            {
-                _cache[path] = _animation;
-            }
         }
         catch (Exception e)
         {
@@ -335,13 +280,14 @@ public class Lottie : Control, IAffectsRender
         }
     }
 
-    private void Stop()
+    private void DisposeImpl()
     {
-        _isRunning = false;
-        _timer?.Stop();
-        _timer = null;
-        _watch.Reset();
-        _count = 0;
+        lock (_sync)
+        {
+            Stop();
+            _animation?.Dispose();
+            _animation = null;
+        }
     }
 
     private void InvalidateRepeatCount()
@@ -392,30 +338,12 @@ public class Lottie : Control, IAffectsRender
         _isRunning = true;
     }
 
-    private void DisposeCache()
+    private void Stop()
     {
-        if (_cache is null)
-        {
-            return;
-        }
-
-        lock (_sync)
-        {
-            foreach (var kvp in _cache)
-            {
-                if (kvp.Value != _animation)
-                {
-                    kvp.Value.Dispose();
-                }
-            }
-
-            _cache = null;
-        }
+        _isRunning = false;
+        _timer?.Stop();
+        _timer = null;
+        _watch.Reset();
+        _count = 0;
     }
-
-    /// <summary>
-    /// Raises the <see cref="Invalidated"/> event.
-    /// </summary>
-    /// <param name="e">The event args.</param>
-    protected void RaiseInvalidated(EventArgs e) => Invalidated?.Invoke(this, e);
 }

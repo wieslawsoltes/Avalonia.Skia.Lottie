@@ -20,7 +20,7 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
 
     public Rect Bounds { get; }
 
-    public bool HitTest(Point p) => false;
+    public bool HitTest(Point p) => true;
 
     public bool Equals(ICustomDrawOperation? other) => false;
 
@@ -34,8 +34,6 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
 
         lock (_lottie._sync)
         {
-            canvas.Save();
-
             var animation = _lottie._animation;
             if (animation is null)
             {
@@ -55,8 +53,8 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
                 }
             }
 
+            canvas.Save();
             animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
-
             canvas.Restore();
         }
     }
