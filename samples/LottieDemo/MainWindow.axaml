@@ -6,6 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="LottieDemo.MainWindow"
         x:CompileBindings="True" x:DataType="local:MainWindowViewModel"
+        DragDrop.AllowDrop="True"
         Icon="/Assets/avalonia-logo.ico"
         Title="Lottie Animation Player for Avalonia">
   <Design.DataContext>
