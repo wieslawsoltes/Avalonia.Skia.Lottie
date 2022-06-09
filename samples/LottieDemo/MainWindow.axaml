@@ -13,12 +13,19 @@
   </Design.DataContext>
   <Grid RowDefinitions="*, Auto" Margin="10">
     <Viewbox Grid.Row="0">
-      <Lottie Path="{Binding SelectedAsset}" RepeatCount="-1" />
+      <Lottie Name="Lottie" Path="{Binding SelectedAsset}" RepeatCount="-1" />
     </Viewbox>
-    <ComboBox Grid.Row="1"
-              Margin="0,10,0,0"
-              HorizontalAlignment="Center"
-              SelectedItem="{Binding SelectedAsset}"
-              Items="{Binding Assets}" />
+    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1">
+      <ComboBox Margin="0,10,0,0"
+                HorizontalAlignment="Center"
+                SelectedItem="{Binding SelectedAsset}"
+                Items="{Binding Assets}" />
+      <NumericUpDown Name="RepeatCount" 
+                     VerticalAlignment="Center"
+                     Margin="10,10,0,0"
+                     MinWidth="120"
+                     Value="{Binding #Lottie.RepeatCount}"
+                     Minimum="-1" />
+    </StackPanel>
   </Grid>
 </Window>
