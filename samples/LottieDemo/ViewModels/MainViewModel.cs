@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Platform;
@@ -22,7 +23,7 @@ public partial class MainViewModel
         var assets = assetLoader?
             .GetAssets(new Uri("avares://LottieDemo/Assets"), new Uri("avares://LottieDemo/"))
             .Where(x => x.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            .Select(x=> new AssetViewModel(x.AbsoluteUri, x.AbsoluteUri));
+            .Select(x=> new AssetViewModel(Path.GetFileName(x.AbsoluteUri), x.AbsoluteUri));
 
         _assets = assets is not null ? new ObservableCollection<AssetViewModel>(assets) : new();
 
@@ -33,6 +34,6 @@ public partial class MainViewModel
 
     public void Add(string path)
     {
-        _assets.Add(new AssetViewModel(path, path));
+        _assets.Add(new AssetViewModel(Path.GetFileName(path), path));
     }
 }
