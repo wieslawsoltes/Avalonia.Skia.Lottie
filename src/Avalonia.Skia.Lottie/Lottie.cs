@@ -204,6 +204,7 @@ public class Lottie : Control, IAffectsRender
         {
             Stop();
             Start();
+            InvalidateVisual();
         }
     }
 
@@ -290,16 +291,6 @@ public class Lottie : Control, IAffectsRender
         }
     }
 
-    private void InvalidateRepeatCount()
-    {
-        if (RepeatCount == 0 || (RepeatCount > 0 && _count >= RepeatCount))
-        {
-            _isRunning = false;
-            _timer?.Stop();
-            _watch.Stop();
-        }
-    }
-
     private void Start()
     {
         if (_animation is null)
@@ -318,32 +309,49 @@ public class Lottie : Control, IAffectsRender
         {
             Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))
         };
-
-        _timer.Tick += (_, _) =>
-        {
-            InvalidateRepeatCount();
-
-            if (_isRunning)
-            {
-                InvalidateVisual();
-            }
-            else
-            {
-                _timer.Stop();
-            }
-        };
-
+        _timer.Tick += (_, _) => Tick();
         _timer.Start();
+
         _watch.Start();
+
         _isRunning = true;
     }
 
+    private void Tick()
+    {
+        if (_timer is null)
+        {
+            return;
+        }
+
+        var repeatCount = RepeatCount;
+        if (repeatCount == 0 || (repeatCount > 0 && _count >= repeatCount))
+        {
+            _isRunning = false;
+            _timer.Stop();
+            _watch.Stop();
+            InvalidateVisual();
+        }
+
+        if (_isRunning)
+        {
+            InvalidateVisual();
+        }
+        else
+        {
+            _timer.Stop();
+        }
+    }
+    
     private void Stop()
     {
         _isRunning = false;
+
         _timer?.Stop();
         _timer = null;
+
         _watch.Reset();
+
         _count = 0;
     }
 }
