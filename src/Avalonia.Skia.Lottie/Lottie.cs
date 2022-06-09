@@ -17,11 +17,12 @@ namespace Avalonia.Skia.Lottie;
 /// </summary>
 public class Lottie : Control, IAffectsRender
 {
-    internal readonly Stopwatch _watch = new ();
+    private readonly Stopwatch _watch = new ();
     internal SkiaSharp.Skottie.Animation? _animation;
     internal readonly object _sync = new ();
     private DispatcherTimer? _timer;
-    internal int _count;
+    private int _repeatCount;
+    private int _count;
     internal bool _isRunning;
     private readonly Uri _baseUri;
 
@@ -202,6 +203,7 @@ public class Lottie : Control, IAffectsRender
 
         if (change.Property == RepeatCountProperty)
         {
+            _repeatCount = change.NewValue.GetValueOrDefault<int>();
             Stop();
             Start();
             InvalidateVisual();
@@ -266,6 +268,7 @@ public class Lottie : Control, IAffectsRender
 
         try
         {
+            _repeatCount = RepeatCount;
             _animation = Load(path, _baseUri);
             if (_animation is null)
             {
@@ -298,7 +301,7 @@ public class Lottie : Control, IAffectsRender
             return;
         }
 
-        if (RepeatCount == 0)
+        if (_repeatCount == 0)
         {
             return;
         }
@@ -324,8 +327,7 @@ public class Lottie : Control, IAffectsRender
             return;
         }
 
-        var repeatCount = RepeatCount;
-        if (repeatCount == 0 || (repeatCount > 0 && _count >= repeatCount))
+        if (_repeatCount == 0 || (_repeatCount > 0 && _count >= _repeatCount))
         {
             _isRunning = false;
             _timer.Stop();
@@ -357,7 +359,7 @@ public class Lottie : Control, IAffectsRender
 
     internal float GetFrameTime()
     {
-        if (_animation is null)
+        if (_animation is null || _timer is null)
         {
             return 0f;
         }
