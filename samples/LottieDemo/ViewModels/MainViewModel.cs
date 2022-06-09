@@ -4,18 +4,18 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia;
 using Avalonia.Platform;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace LottieDemo;
+namespace LottieDemo.ViewModels;
 
 [ObservableObject]
-public partial class MainWindowViewModel
+public partial class MainViewModel
 {
     private readonly ObservableCollection<string> _assets;
 
     [ObservableProperty] private string? _selectedAsset;
 
-    public MainWindowViewModel()
+    public MainViewModel()
     {
         var assetLoader = AvaloniaLocator.Current.GetService<IAssetLoader>();
 

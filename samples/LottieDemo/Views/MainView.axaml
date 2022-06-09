@@ -1,16 +1,14 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LottieDemo"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="LottieDemo.MainWindow"
-        x:CompileBindings="True" x:DataType="local:MainWindowViewModel"
-        DragDrop.AllowDrop="True"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="Lottie Animation Player for Avalonia">
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:LottieDemo.ViewModels"
+             x:CompileBindings="True" x:DataType="vm:MainViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             DragDrop.AllowDrop="True"
+             x:Class="LottieDemo.Views.MainView">
   <Design.DataContext>
-    <local:MainWindowViewModel />
+    <vm:MainViewModel />
   </Design.DataContext>
   <Grid RowDefinitions="*, Auto" Margin="10">
     <Viewbox Grid.Row="0">
@@ -29,4 +27,5 @@
                      Minimum="-1" />
     </StackPanel>
   </Grid>
-</Window>
+</UserControl>
+
