@@ -11,9 +11,9 @@ namespace LottieDemo.ViewModels;
 [ObservableObject]
 public partial class MainViewModel
 {
-    private readonly ObservableCollection<string> _assets;
+    private readonly ObservableCollection<AssetViewModel> _assets;
 
-    [ObservableProperty] private string? _selectedAsset;
+    [ObservableProperty] private AssetViewModel? _selectedAsset;
 
     public MainViewModel()
     {
@@ -22,17 +22,17 @@ public partial class MainViewModel
         var assets = assetLoader?
             .GetAssets(new Uri("avares://LottieDemo/Assets"), new Uri("avares://LottieDemo/"))
             .Where(x => x.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            .Select(x=> x.AbsoluteUri);
+            .Select(x=> new AssetViewModel(x.AbsoluteUri, x.AbsoluteUri));
 
-        _assets = assets is not null ? new ObservableCollection<string>(assets) : new();
+        _assets = assets is not null ? new ObservableCollection<AssetViewModel>(assets) : new();
 
-        _selectedAsset = _assets.FirstOrDefault(x => x.Contains("LottieLogo1.json"));
+        _selectedAsset = _assets.FirstOrDefault(x => x.Path.Contains("LottieLogo1.json"));
     }
 
-    public IReadOnlyList<string> Assets => _assets;
+    public IReadOnlyList<AssetViewModel> Assets => _assets;
 
     public void Add(string path)
     {
-        _assets.Add(path);
+        _assets.Add(new AssetViewModel(path, path));
     }
 }
