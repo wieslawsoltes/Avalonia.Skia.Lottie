@@ -354,4 +354,22 @@ public class Lottie : Control, IAffectsRender
 
         _count = 0;
     }
+
+    internal float GetFrameTime()
+    {
+        if (_animation is null)
+        {
+            return 0f;
+        }
+
+        var frameTime = (float)_watch.Elapsed.TotalSeconds;
+ 
+        if (_watch.Elapsed.TotalSeconds > _animation.Duration)
+        {
+            _watch.Restart();
+            _count++;
+        }
+
+        return frameTime;
+    }
 }
