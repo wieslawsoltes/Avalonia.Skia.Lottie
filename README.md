@@ -17,6 +17,7 @@ An lottie animation player control for Avalonia.
 
 - [Avalonia](https://avaloniaui.net/)
 - [Skottie - Lottie Animation Player](https://skia.org/docs/user/modules/skottie/)
+- [Skottie source code](https://skia.org/docs/user/modules/skottie/)
 - [SkiaSharp.Skottie](https://www.nuget.org/packages/SkiaSharp.Skottie)
 
 ## License
