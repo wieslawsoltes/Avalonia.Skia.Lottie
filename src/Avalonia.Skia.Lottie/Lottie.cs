@@ -150,7 +150,7 @@ public class Lottie : Control, IAffectsRender
 
     public override void Render(DrawingContext context)
     {
-        if (_animation is null || !_isRunning)
+        if (_animation is null)
         {
             return;
         }
@@ -353,14 +353,14 @@ public class Lottie : Control, IAffectsRender
         _count = 0;
     }
 
-    private float GetFrameTime()
+    private double GetFrameTime()
     {
         if (_animation is null || _timer is null)
         {
             return 0f;
         }
 
-        var frameTime = (float)_watch.Elapsed.TotalSeconds;
+        var frameTime = _watch.Elapsed.TotalSeconds;
  
         if (_watch.Elapsed.TotalSeconds > _animation.Duration)
         {
@@ -381,12 +381,18 @@ public class Lottie : Control, IAffectsRender
                 return;
             }
 
-            if (!_isRunning)
+            if (_repeatCount == 0)
             {
                 return;
             }
+            
+            var t = GetFrameTime();
+            if (!_isRunning)
+            {
+                t = (float)animation.Duration;
+            }
 
-            animation.SeekFrameTime(GetFrameTime());
+            animation.SeekFrameTime(t);
  
             canvas.Save();
             animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
