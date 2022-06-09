@@ -5,11 +5,11 @@ using SkiaSharp;
 
 namespace Avalonia.Skia.Lottie;
 
-internal class LottieCustomDrawOperation : ICustomDrawOperation
+internal class FuncCustomDrawOperation : ICustomDrawOperation
 {
     private readonly Action<SKCanvas> _draw;
 
-    public LottieCustomDrawOperation(Rect bounds, Action<SKCanvas> draw)
+    public FuncCustomDrawOperation(Rect bounds, Action<SKCanvas> draw)
     {
         _draw = draw;
         Bounds = bounds;

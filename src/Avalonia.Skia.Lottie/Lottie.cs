@@ -181,7 +181,7 @@ public class Lottie : Control, IAffectsRender
         using (context.PushClip(destRect))
         using (context.PushPreTransform(translateMatrix * scaleMatrix))
         {
-            context.Custom(new LottieCustomDrawOperation(new Rect(0, 0, bounds.Width, bounds.Height), Draw));
+            context.Custom(new FuncCustomDrawOperation(new Rect(0, 0, bounds.Width, bounds.Height), Draw));
         }
     }
 
