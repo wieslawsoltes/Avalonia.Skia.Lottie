@@ -342,7 +342,7 @@ public class Lottie : Control, IAffectsRender
             _timer.Stop();
         }
     }
-    
+
     private void Stop()
     {
         _isRunning = false;
