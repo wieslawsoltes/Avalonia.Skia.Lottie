@@ -1,4 +1,5 @@
-﻿using Avalonia.Platform;
+﻿using System;
+using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
 using SkiaSharp;
 
@@ -6,11 +7,11 @@ namespace Avalonia.Skia.Lottie;
 
 internal class LottieCustomDrawOperation : ICustomDrawOperation
 {
-    private readonly Lottie _lottie;
+    private readonly Action<SKCanvas> _draw;
 
-    public LottieCustomDrawOperation(Rect bounds, Lottie lottie)
+    public LottieCustomDrawOperation(Rect bounds, Action<SKCanvas> draw)
     {
-        _lottie = lottie;
+        _draw = draw;
         Bounds = bounds;
     }
 
@@ -27,27 +28,9 @@ internal class LottieCustomDrawOperation : ICustomDrawOperation
     public void Render(IDrawingContextImpl context)
     {
         var canvas = (context as ISkiaDrawingContextImpl)?.SkCanvas;
-        if (canvas is null)
+        if (canvas is not null)
         {
-            return;
-        }
-
-        lock (_lottie._sync)
-        {
-            var animation = _lottie._animation;
-            if (animation is null)
-            {
-                return;
-            }
-
-            if (_lottie._isRunning)
-            {
-                animation.SeekFrameTime(_lottie.GetFrameTime());
- 
-                canvas.Save();
-                animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
-                canvas.Restore();
-            }
+            _draw(canvas);
         }
     }
 }

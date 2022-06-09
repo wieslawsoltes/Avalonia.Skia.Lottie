@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Avalonia.Controls;
@@ -18,12 +17,12 @@ namespace Avalonia.Skia.Lottie;
 public class Lottie : Control, IAffectsRender
 {
     private readonly Stopwatch _watch = new ();
-    internal SkiaSharp.Skottie.Animation? _animation;
-    internal readonly object _sync = new ();
+    private SkiaSharp.Skottie.Animation? _animation;
+    private readonly object _sync = new ();
     private DispatcherTimer? _timer;
     private int _repeatCount;
     private int _count;
-    internal bool _isRunning;
+    private bool _isRunning;
     private readonly Uri _baseUri;
 
     /// <summary>
@@ -182,10 +181,7 @@ public class Lottie : Control, IAffectsRender
         using (context.PushClip(destRect))
         using (context.PushPreTransform(translateMatrix * scaleMatrix))
         {
-            context.Custom(
-                new LottieCustomDrawOperation(
-                    new Rect(0, 0, bounds.Width, bounds.Height),
-                    this));
+            context.Custom(new LottieCustomDrawOperation(new Rect(0, 0, bounds.Width, bounds.Height), Draw));
         }
     }
 
@@ -357,7 +353,7 @@ public class Lottie : Control, IAffectsRender
         _count = 0;
     }
 
-    internal float GetFrameTime()
+    private float GetFrameTime()
     {
         if (_animation is null || _timer is null)
         {
@@ -373,5 +369,28 @@ public class Lottie : Control, IAffectsRender
         }
 
         return frameTime;
+    }
+
+    private void Draw(SKCanvas canvas)
+    {
+        lock (_sync)
+        {
+            var animation = _animation;
+            if (animation is null)
+            {
+                return;
+            }
+
+            if (!_isRunning)
+            {
+                return;
+            }
+
+            animation.SeekFrameTime(GetFrameTime());
+ 
+            canvas.Save();
+            animation.Render(canvas, new SKRect(0, 0, animation.Size.Width, animation.Size.Height));
+            canvas.Restore();
+        }
     }
 }
