@@ -215,8 +215,9 @@ public class Lottie : Control, IAffectsRender
 
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
     {
+        // var data = new StreamReader(stream).ReadToEnd();
+        // if (SkiaSharp.Skottie.Animation.TryParse(data, out var animation)) 
         using var managedStream = new SKManagedStream(stream);
-
         if (SkiaSharp.Skottie.Animation.TryCreate(managedStream, out var animation))
         {
             animation.Seek(0);
