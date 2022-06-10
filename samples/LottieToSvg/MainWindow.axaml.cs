@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -49,84 +50,75 @@ public partial class MainWindow : Window
         {
             foreach (var path in paths)
             {
-                ToSvg(path, "c:\\Temp\\");
+                var outputPath = "/Users/wieslawsoltes/Downloads/Temp";
+                // var outputPath = "c:\\Temp\\";
+                Convert(path, outputPath);
             }
         });
     }
 
-    // private List<Bitmap> _bs = new List<Bitmap>();
-
-    private void CreatePdf()
+    private void CreatePdf(SkiaSharp.Skottie.Animation animation, string inputFilePath, string outputPath)
     {
-        
-    }
-    
-    private void CreateXps()
-    {
-        
-    }
-
-    
-    private void ToSvg(string inputFilePath, string outputPath)
-    {
-        using var inputStream = File.OpenRead(inputFilePath);
-        using var inputManagedStream = new SKManagedStream(inputStream);
-
-        if (!SkiaSharp.Skottie.Animation.TryCreate(inputManagedStream, out var animation))
-        {
-            return;
-        }
-
         var inPoint = animation.InPoint;
         var outPoint = animation.OutPoint;
         var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
 
-
-
-
-
+        var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.pdf";
+        var outputFilePath = Path.Combine(outputPath, outputFileName);
+        using var outputStream = new SKFileWStream(outputFilePath);
+        using var document = SKDocument.CreatePdf(outputStream, SKDocument.DefaultRasterDpi);
+        if (document is null)
         {
-            var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.pdf";
-            var outputFilePath = Path.Combine(outputPath, outputFileName);
-            using var outputStream = new SKFileWStream(outputFilePath);
-            using var document = SKDocument.CreatePdf(outputStream, SKDocument.DefaultRasterDpi);
-
-            for (var t = inPoint; t <= outPoint; t += 1d)
-            {
-                using var canvas = document.BeginPage(animation.Size.Width, animation.Size.Height);
-                animation.SeekFrame(t);
-                animation.Render(canvas, dst);
-            }
-
-            document.Close();
+            return;
         }
-
-        {
-            var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.xps";
-            var outputFilePath = Path.Combine(outputPath, outputFileName);
-            using var outputStream = new SKFileWStream(outputFilePath);
-            using var document = SKDocument.CreateXps(outputStream, SKDocument.DefaultRasterDpi);
-
-            for (var t = inPoint; t <= outPoint; t += 1d)
-            {
-                using var canvas = document.BeginPage(animation.Size.Width, animation.Size.Height);
-                animation.SeekFrame(t);
-                animation.Render(canvas, dst);
-            }
-
-            document.Close();
-        }
-
-
 
         for (var t = inPoint; t <= outPoint; t += 1d)
         {
-            // var outputFileExtension = "svg";
-            //var outputFileExtension = "png";
-            //var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.{t:0000}.{outputFileExtension}";
-            //var outputFilePath = Path.Combine(outputPath, outputFileName);
+            using var canvas = document.BeginPage(animation.Size.Width, animation.Size.Height);
+            animation.SeekFrame(t);
+            animation.Render(canvas, dst);
+        }
 
-            /*
+        document.Close();
+    }
+    
+    private void CreateXps(SkiaSharp.Skottie.Animation animation, string inputFilePath, string outputPath)
+    {
+        var inPoint = animation.InPoint;
+        var outPoint = animation.OutPoint;
+        var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
+        
+        var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.xps";
+        var outputFilePath = Path.Combine(outputPath, outputFileName);
+        using var outputStream = new SKFileWStream(outputFilePath);
+        using var document = SKDocument.CreateXps(outputStream, SKDocument.DefaultRasterDpi);
+        if (document is null)
+        {
+            return;
+        }
+
+        for (var t = inPoint; t <= outPoint; t += 1d)
+        {
+            using var canvas = document.BeginPage(animation.Size.Width, animation.Size.Height);
+            animation.SeekFrame(t);
+            animation.Render(canvas, dst);
+        }
+
+        document.Close();
+    }
+
+    private void CreateSvg(SkiaSharp.Skottie.Animation animation, string inputFilePath, string outputPath)
+    {
+        var inPoint = animation.InPoint;
+        var outPoint = animation.OutPoint;
+        var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
+
+        for (var t = inPoint; t <= outPoint; t += 1d)
+        {
+            var outputFileExtension = "svg";
+            var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.{t:0000}.{outputFileExtension}";
+            var outputFilePath = Path.Combine(outputPath, outputFileName);
+
             using var outputStream = File.Create(outputFilePath);
             using var outputManagedStream = new SKManagedWStream(outputStream);
 
@@ -135,9 +127,23 @@ public partial class MainWindow : Window
 
             animation.SeekFrame(t);
             animation.Render(canvas, dst);
-            //*/
+        } 
+    }
+    
+    private void CreatePng(SkiaSharp.Skottie.Animation animation, string inputFilePath, string outputPath)
+    {
+        var inPoint = animation.InPoint;
+        var outPoint = animation.OutPoint;
+        var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
 
-            /*
+        // var bs = new List<Bitmap>();
+
+        for (var t = inPoint; t <= outPoint; t += 1d)
+        {
+            var outputFileExtension = "png";
+            var outputFileName = $"{Path.GetFileNameWithoutExtension(inputFilePath)}.{t:0000}.{outputFileExtension}";
+            var outputFilePath = Path.Combine(outputPath, outputFileName);
+
             var imageInfo = new SKImageInfo((int)animation.Size.Width, (int)animation.Size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
             using var bitmap = new SKBitmap(imageInfo);
             using var canvas = new SKCanvas(bitmap);
@@ -152,9 +158,26 @@ public partial class MainWindow : Window
             data.SaveTo(outputStream);
 
             // var b = new Bitmap(data.AsStream());
-            // _bs.Add(b);
-
-            //*/
+            // bs.Add(b);
         }
+    }
+
+    private void Convert(string inputFilePath, string outputPath)
+    {
+        using var inputStream = File.OpenRead(inputFilePath);
+        using var inputManagedStream = new SKManagedStream(inputStream);
+
+        if (!SkiaSharp.Skottie.Animation.TryCreate(inputManagedStream, out var animation))
+        {
+            return;
+        }
+
+        CreatePdf(animation, inputFilePath, outputPath);
+
+        CreateXps(animation, inputFilePath, outputPath);
+        
+        CreateSvg(animation, inputFilePath, outputPath);
+        
+        CreatePng(animation, inputFilePath, outputPath);
     }
 }
