@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>False</IsPackable>
+    <TrimMode>copyused</TrimMode>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <RootNamespace>LottieDemo.Desktop</RootNamespace>
+    <ApplicationIcon>Assets/avalonia-logo.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.15" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.1-preview.63" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LottieDemo\LottieDemo.csproj" />
+  </ItemGroup>
+</Project>

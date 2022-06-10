@@ -1,7 +1,7 @@
 ﻿using System;
 using Avalonia;
 
-namespace LottieDemo;
+namespace LottieDemo.Desktop;
 
 class Program
 {
