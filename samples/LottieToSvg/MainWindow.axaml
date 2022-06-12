@@ -8,10 +8,5 @@
         WindowStartupLocation="CenterScreen" WindowState="Normal"
         Width="500" Height="500"
         Title="Lottie To Svg">
-  <Grid RowDefinitions="*,Auto">
-    <Viewbox Grid.Row="0">
-      <Image Name="Image" />
-    </Viewbox>
-    <Slider Grid.Row="1" Name="Slider" IsVisible="False" />
-  </Grid>
+  <TextBox Name="OutputPath" VerticalAlignment="Center" Margin="10" Text="" />
 </Window>
