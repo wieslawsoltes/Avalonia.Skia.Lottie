@@ -1,21 +1,16 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using SkiaSharp;
 
 namespace LottieToSvg;
 
 public partial class MainWindow : Window
 {
-    private List<Bitmap>? _bitmaps;
-
     public MainWindow()
     {
         InitializeComponent();
@@ -49,12 +44,25 @@ public partial class MainWindow : Window
             return;
         }
 
+        var outputPath = OutputPath.Text;
+
+        if (string.IsNullOrWhiteSpace(outputPath))
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                outputPath = "c:\\Temp\\";
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                outputPath = "/Users/wieslawsoltes/Downloads/Temp";
+            }
+        }
+
         await Task.Run(() =>
         {
             foreach (var path in paths)
             {
-                var outputPath = "/Users/wieslawsoltes/Downloads/Temp";
-                // var outputPath = "c:\\Temp\\";
                 Convert(path, outputPath);
             }
         });
@@ -83,33 +91,6 @@ public partial class MainWindow : Window
         } 
     }
 
-    private List<Bitmap> CreateBitmaps(SkiaSharp.Skottie.Animation animation)
-    {
-        var inPoint = animation.InPoint;
-        var outPoint = animation.OutPoint;
-        var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
-
-        var bs = new List<Bitmap>();
-
-        for (var t = inPoint; t <= outPoint; t += 1d)
-        {
-            var imageInfo = new SKImageInfo((int)animation.Size.Width, (int)animation.Size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);
-            using var bitmap = new SKBitmap(imageInfo);
-            using var canvas = new SKCanvas(bitmap);
-
-            animation.SeekFrame(t);
-            animation.Render(canvas, dst);
-
-            using var image = SKImage.FromBitmap(bitmap);
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-
-            var b = new Bitmap(data.AsStream());
-            bs.Add(b);
-        }
-
-        return bs;
-    }
-
     private void Convert(string inputFilePath, string outputPath)
     {
         using var inputStream = File.OpenRead(inputFilePath);
@@ -120,29 +101,6 @@ public partial class MainWindow : Window
             return;
         }
 
-        // CreateSvg(animation, inputFilePath, outputPath);
-
-        _bitmaps = CreateBitmaps(animation);
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            Slider.Minimum = 0;
-            Slider.Maximum = _bitmaps.Count - 1;
-            Slider.TickFrequency = 1;
-            Slider.SmallChange = 1;
-            Slider.LargeChange = animation.Fps;
-            Slider.Value = 0;
-            Slider.IsVisible = true;
-
-            Image.Source = _bitmaps.FirstOrDefault();
-
-            Slider.PropertyChanged += (_, args) =>
-            {
-                if (args.Property == RangeBase.ValueProperty)
-                {
-                    Image.Source = _bitmaps[(int)Slider.Value];
-                }
-            };
-        }, DispatcherPriority.Render);
+        CreateSvg(animation, inputFilePath, outputPath);
     }
 }
