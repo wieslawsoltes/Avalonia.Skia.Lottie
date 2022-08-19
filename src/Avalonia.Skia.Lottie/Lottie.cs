@@ -187,20 +187,20 @@ public class Lottie : Control, IAffectsRender
     }
 
     /// <inheritdoc/>
-    protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> change)
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
 
         if (change.Property == PathProperty)
         {
-            var path = change.NewValue.GetValueOrDefault<string?>();
+            var path = change.GetNewValue<string?>();
             Load(path);
             RaiseInvalidated(EventArgs.Empty);
         }
 
         if (change.Property == RepeatCountProperty)
         {
-            _repeatCount = change.NewValue.GetValueOrDefault<int>();
+            _repeatCount = change.GetNewValue<int>();
             Stop();
             Start();
             InvalidateVisual();
@@ -367,7 +367,7 @@ public class Lottie : Control, IAffectsRender
 
         var frameTime = _watch.Elapsed.TotalSeconds;
  
-        if (_watch.Elapsed.TotalSeconds > _animation.Duration)
+        if (_watch.Elapsed.TotalSeconds > _animation.Duration.TotalSeconds)
         {
             _watch.Restart();
             _ic?.End();
@@ -404,7 +404,7 @@ public class Lottie : Control, IAffectsRender
             var t = GetFrameTime();
             if (!_isRunning)
             {
-                t = (float)animation.Duration;
+                t = (float)animation.Duration.TotalSeconds;
             }
 
             var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);

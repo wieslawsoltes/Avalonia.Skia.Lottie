@@ -9,8 +9,8 @@
     <RootNamespace>Avalonia.Skia.Lottie</RootNamespace>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionPrefix>0.10.15</VersionPrefix>
-    <VersionSuffix>preview.65</VersionSuffix>
+    <VersionPrefix>11.0.0</VersionPrefix>
+    <VersionSuffix>preview1</VersionSuffix>
     <Authors>Wiesław Šoltés</Authors>
     <Company>Wiesław Šoltés</Company>
     <Copyright>Copyright © Wiesław Šoltés 2022</Copyright>
@@ -27,9 +27,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.15" />
-    <PackageReference Include="Avalonia.Skia" Version="0.10.15" />
-    <PackageReference Include="SkiaSharp" Version="2.88.1-preview.63" />
-    <PackageReference Include="SkiaSharp.Skottie" Version="2.88.1-preview.63" />
+    <PackageReference Include="Avalonia" Version="11.0.0-preview1" />
+    <PackageReference Include="Avalonia.Skia" Version="11.0.0-preview1" />
+    <PackageReference Include="SkiaSharp" Version="2.88.1-preview.108" />
+    <PackageReference Include="SkiaSharp.Skottie" Version="2.88.1-preview.108" />
   </ItemGroup>
 </Project>

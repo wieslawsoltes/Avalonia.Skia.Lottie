@@ -13,8 +13,9 @@
     <AvaloniaResource Include="Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.15" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.1-preview.63" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.1-preview.108" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LottieDemo\LottieDemo.csproj" />

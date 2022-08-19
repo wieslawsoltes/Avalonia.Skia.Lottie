@@ -59,6 +59,11 @@ public partial class MainWindow : Window
             }
         }
 
+        if (outputPath is null)
+        {
+            return;
+        }
+        
         await Task.Run(() =>
         {
             foreach (var path in paths)
