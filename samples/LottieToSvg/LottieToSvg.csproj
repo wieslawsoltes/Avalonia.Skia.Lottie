@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <TrimMode>copyused</TrimMode>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <TrimmableAssembly Include="Avalonia.Themes.Fluent" />
