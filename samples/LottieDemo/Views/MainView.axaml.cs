@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using LottieDemo.ViewModels;
@@ -13,6 +14,12 @@ public partial class MainView : UserControl
 
         AddHandler(DragDrop.DragOverEvent, DragOver);
         AddHandler(DragDrop.DropEvent, Drop);
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        Focus();
     }
 
     private void DragOver(object? sender, DragEventArgs e)
