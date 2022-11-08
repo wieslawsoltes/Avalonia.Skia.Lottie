@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace LottieDemo.ViewModels;
 
@@ -35,5 +36,39 @@ public partial class MainViewModel
     public void Add(string path)
     {
         _assets.Add(new AssetViewModel(Path.GetFileName(path), path));
+    }
+
+    [RelayCommand]
+    private void Previous()
+    {
+        if (_selectedAsset is { } && _assets.Count > 1)
+        {
+            var index = _assets.IndexOf(_selectedAsset);
+            if (index == 0)
+            {
+                SelectedAsset = _assets[_assets.Count - 1];
+            }
+            else if (index > 0)
+            {
+                SelectedAsset = _assets[index - 1];
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void Next()
+    {
+        if (_selectedAsset is { } && _assets.Count > 1)
+        {
+            var index = _assets.IndexOf(_selectedAsset);
+            if (index == _assets.Count - 1)
+            {
+                SelectedAsset = _assets[0];
+            }
+            else if (index >= 0 && index < _assets.Count - 1)
+            {
+                SelectedAsset = _assets[index + 1];
+            }
+        }
     }
 }
