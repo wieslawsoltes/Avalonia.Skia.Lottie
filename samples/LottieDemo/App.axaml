@@ -1,8 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Name="Lottie Animation Player for Avalonia"
+             RequestedThemeVariant="Light"
              x:Class="LottieDemo.App">
   <Application.Styles>
-    <FluentTheme Mode="Light" />
+    <FluentTheme />
   </Application.Styles>
 </Application>
