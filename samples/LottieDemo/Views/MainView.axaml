@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              DragDrop.AllowDrop="True"
              x:Class="LottieDemo.Views.MainView"
-             FontFamily="avares://Avalonia.Themes.Fluent/Assets#Inter">
+             FontFamily="avares://Avalonia.Fonts.Inter/Assets#Inter">
   <Design.DataContext>
     <vm:MainViewModel />
   </Design.DataContext>
