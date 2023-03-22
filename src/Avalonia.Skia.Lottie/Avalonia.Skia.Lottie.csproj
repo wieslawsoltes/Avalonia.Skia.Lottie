@@ -9,22 +9,10 @@
     <RootNamespace>Avalonia.Skia.Lottie</RootNamespace>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionPrefix>11.0.0</VersionPrefix>
-    <VersionSuffix>preview6</VersionSuffix>
-    <Authors>Wiesław Šoltés</Authors>
-    <Company>Wiesław Šoltés</Company>
-    <Copyright>Copyright © Wiesław Šoltés 2022</Copyright>
-    <PackageProjectUrl>https://github.com/wieslawsoltes/Avalonia.Skia.Lottie</PackageProjectUrl>
-  </PropertyGroup>
-  <PropertyGroup>
     <Description>An lottie animation player control for Avalonia.</Description>
     <PackageId>Avalonia.Skia.Lottie</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>lottie;animation;player;vector graphics;rendering;2d;graphics;geometry;shapes;skiasharp;skia;skottie;control;avalonia;avaloniaui</PackageTags>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
