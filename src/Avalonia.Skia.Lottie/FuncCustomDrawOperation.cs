@@ -21,10 +21,12 @@ internal class FuncCustomDrawOperation : ICustomDrawOperation
 
     public Rect Bounds { get; }
 
-    public bool HitTest(Point p) => true;
+    public bool HitTest(Point p) => false;
 
-    public bool Equals(ICustomDrawOperation? other) => false;
-
+    public bool Equals(ICustomDrawOperation? other)
+    {
+        return object.ReferenceEquals(this, other);
+    }
     public void Render(IDrawingContextImpl context)
     {
         var leaseFeature = context.GetFeature<ISkiaSharpApiLeaseFeature>();
