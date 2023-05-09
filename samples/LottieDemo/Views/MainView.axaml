@@ -57,7 +57,7 @@
       <ComboBox Margin="0,10,0,0"
                 HorizontalAlignment="Center"
                 SelectedItem="{Binding SelectedAsset}"
-                Items="{Binding Assets}" />
+                ItemsSource="{Binding Assets}" />
       <NumericUpDown Name="RepeatCount" 
                      VerticalAlignment="Center"
                      Margin="10,10,0,0"

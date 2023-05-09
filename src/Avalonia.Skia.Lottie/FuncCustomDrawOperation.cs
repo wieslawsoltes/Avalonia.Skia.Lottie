@@ -1,4 +1,5 @@
 ﻿using System;
+using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
 using SkiaSharp;
@@ -25,9 +26,9 @@ internal class FuncCustomDrawOperation : ICustomDrawOperation
 
     public bool Equals(ICustomDrawOperation? other) => false;
 
-    public void Render(IDrawingContextImpl context)
+    public void Render(ImmediateDrawingContext context)
     {
-        var leaseFeature = context.GetFeature<ISkiaSharpApiLeaseFeature>();
+        var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
         if (leaseFeature is null)
         {
             return;
