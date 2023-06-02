@@ -19,14 +19,12 @@ public partial class MainViewModel
 
     public MainViewModel()
     {
-        var assetLoader = AvaloniaLocator.Current.GetService<IAssetLoader>();
+        var assets = AssetLoader
+                     .GetAssets(new Uri("avares://LottieDemo/Assets"), new Uri("avares://LottieDemo/"))
+                     .Where(x => x.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                     .Select(x=> new AssetViewModel(Path.GetFileName(x.AbsoluteUri), x.AbsoluteUri));
 
-        var assets = assetLoader?
-            .GetAssets(new Uri("avares://LottieDemo/Assets"), new Uri("avares://LottieDemo/"))
-            .Where(x => x.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            .Select(x=> new AssetViewModel(Path.GetFileName(x.AbsoluteUri), x.AbsoluteUri));
-
-        _assets = assets is not null ? new ObservableCollection<AssetViewModel>(assets) : new();
+        _assets = new ObservableCollection<AssetViewModel>(assets);
 
         _selectedAsset = _assets.FirstOrDefault(x => x.Path.Contains("LottieLogo1.json"));
     }

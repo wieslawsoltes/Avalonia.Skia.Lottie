@@ -14,7 +14,7 @@ namespace Avalonia.Skia.Lottie;
 /// <summary>
 /// Lottie animation player control.
 /// </summary>
-public class Lottie : Control, IAffectsRender
+public class Lottie : Control
 {
     private readonly Stopwatch _watch = new ();
     private SkiaSharp.Skottie.Animation? _animation;
@@ -56,9 +56,6 @@ public class Lottie : Control, IAffectsRender
     /// </summary>
     public static readonly StyledProperty<int> RepeatCountProperty = 
         AvaloniaProperty.Register<Lottie, int>(nameof(RepeatCount), Infinity);
-
-    /// <inheritdoc/>
-    public event EventHandler? Invalidated;
 
     /// <summary>
     /// Gets or sets the Lottie animation path.
@@ -195,7 +192,7 @@ public class Lottie : Control, IAffectsRender
         {
             var path = change.GetNewValue<string?>();
             Load(path);
-            RaiseInvalidated(EventArgs.Empty);
+            InvalidateVisual();
         }
 
         if (change.Property == RepeatCountProperty)
@@ -206,12 +203,6 @@ public class Lottie : Control, IAffectsRender
             InvalidateVisual();
         }
     }
-
-    /// <summary>
-    /// Raises the <see cref="Invalidated"/> event.
-    /// </summary>
-    /// <param name="e">The event args.</param>
-    protected void RaiseInvalidated(EventArgs e) => Invalidated?.Invoke(this, e);
 
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
     {
@@ -243,12 +234,10 @@ public class Lottie : Control, IAffectsRender
             return Load(fileStream);
         }
 
-        var loader = AvaloniaLocator.Current.GetService<IAssetLoader>();
-        using var assetStream = loader?.Open(uri, baseUri);
-        if (assetStream is null)
-        {
+        if (!AssetLoader.Exists(uri, baseUri))
             return default;
-        }
+        
+        using var assetStream = AssetLoader.Open(uri, baseUri);
 
         return Load(assetStream);
     }
