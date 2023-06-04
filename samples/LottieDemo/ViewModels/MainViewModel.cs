@@ -19,9 +19,7 @@ public partial class MainViewModel
 
     public MainViewModel()
     {
-        var assetLoader = AvaloniaLocator.Current.GetService<IAssetLoader>();
-
-        var assets = assetLoader?
+        var assets = AssetLoader
             .GetAssets(new Uri("avares://LottieDemo/Assets"), new Uri("avares://LottieDemo/"))
             .Where(x => x.AbsolutePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             .Select(x=> new AssetViewModel(Path.GetFileName(x.AbsoluteUri), x.AbsoluteUri));
