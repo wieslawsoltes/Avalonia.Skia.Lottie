@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Logging;
 using Avalonia.Media;
 using Avalonia.Metadata;
 using Avalonia.Platform;
+using Avalonia.Rendering.Composition;
 using Avalonia.Threading;
 using SkiaSharp;
 
@@ -16,14 +18,8 @@ namespace Avalonia.Skia.Lottie;
 /// </summary>
 public class Lottie : Control
 {
-    private readonly Stopwatch _watch = new ();
     private SkiaSharp.Skottie.Animation? _animation;
-    private SkiaSharp.SceneGraph.InvalidationController? _ic;
-    private readonly object _sync = new ();
-    private DispatcherTimer? _timer;
-    private int _repeatCount;
-    private int _count;
-    private bool _isRunning;
+    private static int _repeatCount;
     private readonly Uri _baseUri;
 
     /// <summary>
@@ -54,8 +50,10 @@ public class Lottie : Control
     /// <summary>
     /// Defines the <see cref="RepeatCount"/> property.
     /// </summary>
-    public static readonly StyledProperty<int> RepeatCountProperty = 
+    public static readonly StyledProperty<int> RepeatCountProperty =
         AvaloniaProperty.Register<Lottie, int>(nameof(RepeatCount), Infinity);
+
+    private CompositionCustomVisual? _customVisual;
 
     /// <summary>
     /// Gets or sets the Lottie animation path.
@@ -94,12 +92,6 @@ public class Lottie : Control
         set => SetValue(RepeatCountProperty, value);
     }
 
-    static Lottie()
-    {
-        AffectsRender<Lottie>(PathProperty, StretchProperty, StretchDirectionProperty);
-        AffectsMeasure<Lottie>(PathProperty, StretchProperty, StretchDirectionProperty);
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="Lottie"/> class.
     /// </summary>
@@ -124,12 +116,37 @@ public class Lottie : Control
         {
             return new Size();
         }
-        
+
         var sourceSize = _animation is { }
             ? new Size(_animation.Size.Width, _animation.Size.Height)
             : default;
 
         return Stretch.CalculateSize(availableSize, sourceSize, StretchDirection);
+    }
+
+    protected override void OnLoaded()
+    {
+        var elemVisual = ElementComposition.GetElementVisual(this);
+        var compositor = elemVisual?.Compositor;
+        if (compositor is null) return;
+
+        _customVisual = compositor.CreateCustomVisual(new SkottieCustomVisualHandler());
+
+        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
+
+        ElementComposition.SetElementChildVisual(this, _customVisual);
+
+        LayoutUpdated += OnLayoutUpdated;
+        
+        base.OnLoaded();
+    }
+
+    private void OnLayoutUpdated(object sender, EventArgs e)
+    {
+        if (_customVisual == null) return;
+        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
+        _customVisual.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Update,
+            _animation, Stretch, StretchDirection));
     }
 
     protected override Size ArrangeOverride(Size finalSize)
@@ -146,62 +163,30 @@ public class Lottie : Control
         return Stretch.CalculateSize(finalSize, sourceSize);
     }
 
-    public override void Render(DrawingContext context)
-    {
-        if (_animation is null)
-        {
-            return;
-        }
-
-        var viewPort = new Rect(Bounds.Size);
-        var sourceSize = new Size(_animation.Size.Width, _animation.Size.Height);
-        if (sourceSize.Width <= 0 || sourceSize.Height <= 0)
-        {
-            return;
-        }
-
-        var scale = Stretch.CalculateScaling(Bounds.Size, sourceSize, StretchDirection);
-        var scaledSize = sourceSize * scale;
-        var destRect = viewPort
-            .CenterRect(new Rect(scaledSize))
-            .Intersect(viewPort);
-        var sourceRect = new Rect(sourceSize)
-            .CenterRect(new Rect(destRect.Size / scale));
-
-        var bounds = SKRect.Create(new SKPoint(), _animation.Size);
-        var scaleMatrix = Matrix.CreateScale(
-            destRect.Width / sourceRect.Width,
-            destRect.Height / sourceRect.Height);
-        var translateMatrix = Matrix.CreateTranslation(
-            -sourceRect.X + destRect.X - bounds.Top,
-            -sourceRect.Y + destRect.Y - bounds.Left);
-
-        using (context.PushClip(destRect))
-        using (context.PushTransform(translateMatrix * scaleMatrix))
-        {
-            context.Custom(new FuncCustomDrawOperation(new Rect(0, 0, bounds.Width, bounds.Height), Draw));
-        }
-    }
-
     /// <inheritdoc/>
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-
-        if (change.Property == PathProperty)
+        
+        switch (change.Property.Name)
         {
-            var path = change.GetNewValue<string?>();
-            Load(path);
-            InvalidateVisual();
+            case nameof(Path):
+                var path = change.GetNewValue<string?>();
+                Load(path);
+                Stop();
+                Start();
+                break;
+            case nameof(RepeatCount):
+                _repeatCount = change.GetNewValue<int>();
+                Stop();
+                Start();
+                break; 
         }
+    }
 
-        if (change.Property == RepeatCountProperty)
-        {
-            _repeatCount = change.GetNewValue<int>();
-            Stop();
-            Start();
-            InvalidateVisual();
-        }
+    private void Stop()
+    {
+        _customVisual?.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Stop));
     }
 
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
@@ -215,7 +200,8 @@ public class Lottie : Control
 
             Logger
                 .TryGet(LogEventLevel.Information, LogArea.Control)?
-                .Log(this, $"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
+                .Log(this,
+                    $"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
         }
         else
         {
@@ -274,143 +260,12 @@ public class Lottie : Control
 
     private void DisposeImpl()
     {
-        lock (_sync)
-        {
-            Stop();
-            _animation?.Dispose();
-            _animation = null;
-            _ic?.End();
-            _ic?.Dispose();
-            _ic = null;
-        }
+        _customVisual?.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Dispose));
     }
 
     private void Start()
     {
-        if (_animation is null)
-        {
-            return;
-        }
-
-        if (_repeatCount == 0)
-        {
-            return;
-        }
-
-        _count = 0;
-
-        _timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(Math.Max(1 / 60.0, 1 / _animation.Fps))
-        };
-        _timer.Tick += (_, _) => Tick();
-        _timer.Start();
-
-        _watch.Start();
-
-        _isRunning = true;
-    }
-
-    private void Tick()
-    {
-        if (_timer is null)
-        {
-            return;
-        }
-
-        if (_repeatCount == 0 || (_repeatCount > 0 && _count >= _repeatCount))
-        {
-            _isRunning = false;
-            _timer.Stop();
-            _watch.Stop();
-            InvalidateVisual();
-        }
-
-        if (_isRunning)
-        {
-            InvalidateVisual();
-        }
-        else
-        {
-            _timer.Stop();
-        }
-    }
-
-    private void Stop()
-    {
-        _isRunning = false;
-
-        _timer?.Stop();
-        _timer = null;
-
-        _watch.Reset();
-
-        _count = 0;
-    }
-
-    private double GetFrameTime()
-    {
-        if (_animation is null || _timer is null)
-        {
-            return 0f;
-        }
-
-        var frameTime = _watch.Elapsed.TotalSeconds;
- 
-        if (_watch.Elapsed.TotalSeconds > _animation.Duration.TotalSeconds)
-        {
-            _watch.Restart();
-            _ic?.End();
-            _ic?.Begin();
-            _count++;
-        }
-
-        return frameTime;
-    }
-
-    private void Draw(SKCanvas canvas)
-    {
-        lock (_sync)
-        {
-            var animation = _animation;
-            if (animation is null)
-            {
-                return;
-            }
-
-            if (_ic is null)
-            {
-                _ic = new SkiaSharp.SceneGraph.InvalidationController();
-                _ic.Begin();
-            }
-
-            var ic = _ic;
-
-            if (_repeatCount == 0)
-            {
-                return;
-            }
-            
-            var t = GetFrameTime();
-            if (!_isRunning)
-            {
-                t = (float)animation.Duration.TotalSeconds;
-            }
-
-            var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
-
-            animation.SeekFrameTime(t, ic);
-
-            // Debug.WriteLine($"dst: {dst}, ic.Bounds: {ic.Bounds}");
-
-            canvas.Save();
-
-            animation.Render(canvas, dst);
-            // canvas.DrawRect(ic.Bounds, new SKPaint { Color = SKColors.Magenta, Style = SKPaintStyle.Stroke, StrokeWidth = 1 });
-
-            canvas.Restore();
-
-            ic.Reset();
-        }
+        _customVisual?.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Start, _animation,
+            Stretch, StretchDirection, _repeatCount));
     }
 }
