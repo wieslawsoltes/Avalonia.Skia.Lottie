@@ -221,7 +221,7 @@ public class SkottieCustomVisualHandler : CompositionCustomVisualHandler
             var translateMatrix = Matrix.CreateTranslation(
                 -sourceRect.X + destRect.X - bounds.Top,
                 -sourceRect.Y + destRect.Y - bounds.Left);
-            context.FillRectangle(Brushes.Aqua, destRect);
+            // context.FillRectangle(Brushes.Aqua, destRect);
 
             // using (context.PushClip(destRect))
             using (context.PushPostTransform(translateMatrix * scaleMatrix))
