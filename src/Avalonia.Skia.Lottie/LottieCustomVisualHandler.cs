@@ -27,7 +27,8 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
         Dispose
     }
 
-    public record struct Payload(Command Command,
+    public record struct Payload(
+        Command Command,
         SkiaSharp.Skottie.Animation? Animation = null,
         Stretch? Stretch = null,
         StretchDirection? StretchDirection = null,
