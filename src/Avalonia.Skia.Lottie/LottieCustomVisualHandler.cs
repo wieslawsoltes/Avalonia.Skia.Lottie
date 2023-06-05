@@ -6,7 +6,7 @@ using SkiaSharp;
 
 namespace Avalonia.Skia.Lottie;
 
-public class SkottieCustomVisualHandler : CompositionCustomVisualHandler
+internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
 {
     private TimeSpan _primaryTimeElapsed, _animationElapsed;
     private TimeSpan? _lastServerTime;

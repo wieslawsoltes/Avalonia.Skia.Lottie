@@ -129,7 +129,7 @@ public class Lottie : Control
         var elemVisual = ElementComposition.GetElementVisual(this);
         var compositor = elemVisual?.Compositor;
         if (compositor is null) return;
-        _customVisual = compositor.CreateCustomVisual(new SkottieCustomVisualHandler());
+        _customVisual = compositor.CreateCustomVisual(new LottieCustomVisualHandler());
         ElementComposition.SetElementChildVisual(this, _customVisual);
         LayoutUpdated += OnLayoutUpdated;
         
@@ -140,7 +140,7 @@ public class Lottie : Control
             DisposeImpl();
             Load(preloadPath);
             _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-            _customVisual.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Update,
+            _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Update,
                 _animation, Stretch, StretchDirection));
             Start();
             preloadPath = null;
@@ -151,7 +151,7 @@ public class Lottie : Control
     {
         if (_customVisual == null) return;
         _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-        _customVisual.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Update,
+        _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Update,
             _animation, Stretch, StretchDirection));
     }
 
@@ -198,7 +198,7 @@ public class Lottie : Control
 
     private void Stop()
     {
-        _customVisual?.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Stop));
+        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Stop));
     }
 
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
@@ -279,12 +279,12 @@ public class Lottie : Control
 
     private void DisposeImpl()
     {
-        _customVisual?.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Dispose));
+        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Dispose));
     }
 
     private void Start()
     {
-        _customVisual?.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Start, _animation,
+        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Start, _animation,
             Stretch, StretchDirection, _repeatCount));
     }
 }
