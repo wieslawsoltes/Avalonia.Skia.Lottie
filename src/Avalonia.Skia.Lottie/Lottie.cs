@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using Avalonia.Controls;
@@ -8,7 +7,6 @@ using Avalonia.Media;
 using Avalonia.Metadata;
 using Avalonia.Platform;
 using Avalonia.Rendering.Composition;
-using Avalonia.Threading;
 using SkiaSharp;
 
 namespace Avalonia.Skia.Lottie;
@@ -19,8 +17,10 @@ namespace Avalonia.Skia.Lottie;
 public class Lottie : Control
 {
     private SkiaSharp.Skottie.Animation? _animation;
-    private static int _repeatCount;
+    private int _repeatCount;
     private readonly Uri _baseUri;
+    private string? _preloadPath;
+    private CompositionCustomVisual? _customVisual;
 
     /// <summary>
     /// Infinite number of repeats.
@@ -52,8 +52,6 @@ public class Lottie : Control
     /// </summary>
     public static readonly StyledProperty<int> RepeatCountProperty =
         AvaloniaProperty.Register<Lottie, int>(nameof(RepeatCount), Infinity);
-
-    private CompositionCustomVisual? _customVisual;
 
     /// <summary>
     /// Gets or sets the Lottie animation path.
@@ -128,32 +126,46 @@ public class Lottie : Control
     {
         var elemVisual = ElementComposition.GetElementVisual(this);
         var compositor = elemVisual?.Compositor;
-        if (compositor is null) return;
+        if (compositor is null)
+        {
+            return;
+        }
+        
         _customVisual = compositor.CreateCustomVisual(new LottieCustomVisualHandler());
         ElementComposition.SetElementChildVisual(this, _customVisual);
         LayoutUpdated += OnLayoutUpdated;
 
         base.OnLoaded();
 
-        if (preloadPath is not null)
+        if (_preloadPath is null)
         {
-            DisposeImpl();
-            Load(preloadPath);
-            _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-            _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(
-                LottieCustomVisualHandler.Command.Update,
-                _animation, Stretch, StretchDirection));
-            Start();
-            preloadPath = null;
+            return;
         }
+        
+        DisposeImpl();
+        Load(_preloadPath);
+        
+        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
+        _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(
+            LottieCustomVisualHandler.Command.Update,
+            _animation, 
+            Stretch, 
+            StretchDirection));
+        
+        Start();
+        _preloadPath = null;
     }
 
     private void OnLayoutUpdated(object sender, EventArgs e)
     {
         if (_customVisual == null) return;
         _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-        _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Update,
-            _animation, Stretch, StretchDirection));
+        _customVisual.SendHandlerMessage(
+            new LottieCustomVisualHandler.Payload(
+                LottieCustomVisualHandler.Command.Update, 
+                _animation, 
+                Stretch, 
+                StretchDirection));
     }
 
     protected override Size ArrangeOverride(Size finalSize)
@@ -178,21 +190,25 @@ public class Lottie : Control
         switch (change.Property.Name)
         {
             case nameof(Path):
+            {
                 var path = change.GetNewValue<string?>();
 
-                if (preloadPath is null && _customVisual is null)
+                if (_preloadPath is null && _customVisual is null)
                 {
-                    preloadPath = path;
+                    _preloadPath = path;
                     return;
                 }
 
                 Load(path);
                 break;
+            }
             case nameof(RepeatCount):
+            {
                 _repeatCount = change.GetNewValue<int>();
                 Stop();
                 Start();
                 break;
+            }
         }
     }
 
@@ -204,8 +220,6 @@ public class Lottie : Control
 
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
     {
-        // var data = new StreamReader(stream).ReadToEnd();
-        // if (SkiaSharp.Skottie.Animation.TryParse(data, out var animation)) 
         using var managedStream = new SKManagedStream(stream);
         if (SkiaSharp.Skottie.Animation.TryCreate(managedStream, out var animation))
         {
@@ -234,6 +248,7 @@ public class Lottie : Control
         }
 
         using var assetStream = AssetLoader.Open(uri, baseUri);
+
         if (assetStream is null)
         {
             return default;
@@ -241,8 +256,6 @@ public class Lottie : Control
 
         return Load(assetStream);
     }
-
-    private string? preloadPath;
 
     private void Load(string? path)
     {
