@@ -78,7 +78,7 @@
                        Value="{Binding #Lottie.RepeatCount}"
                        Minimum="-1" />
         <CheckBox Margin="10,10,0,0" 
-                  IsChecked="{Binding EnableCheckerboard}" Content="Checkerboard BG" />
+                  IsChecked="{Binding EnableCheckerboard}" Content="Checkerboard" />
       </WrapPanel>
     </Grid>
   </Panel>
