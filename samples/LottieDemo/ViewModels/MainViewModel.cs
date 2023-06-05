@@ -16,6 +16,7 @@ public partial class MainViewModel
     private readonly ObservableCollection<AssetViewModel> _assets;
 
     [ObservableProperty] private AssetViewModel? _selectedAsset;
+    [ObservableProperty] private bool _enableCheckerboard;
 
     public MainViewModel()
     {
