@@ -14,12 +14,11 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
     private SkiaSharp.Skottie.Animation? _animation;
     private Stretch? _stretch;
     private StretchDirection? _stretchDirection;
-
     private SkiaSharp.SceneGraph.InvalidationController? _ic;
     private readonly object _sync = new();
     private int _repeatCount;
     private int _count;
-    
+
     public enum Command
     {
         Start,
@@ -68,12 +67,12 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
                 _stretchDirection = sd;
                 RegisterForNextAnimationFrameUpdate();
                 break;
-            case { Command: Command.Stop }:
+            case {Command: Command.Stop}:
                 _running = false;
                 _animationElapsed = TimeSpan.Zero;
                 _count = 0;
                 break;
-            case { Command: Command.Dispose }:
+            case {Command: Command.Dispose}:
                 DisposeImpl();
                 break;
         }
@@ -226,9 +225,8 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
             // using (context.PushClip(destRect))
             using (context.PushPostTransform(translateMatrix * scaleMatrix))
             {
-                    
                 // context.FillRectangle(Brushes.Aqua, destRect);
-                    
+
                 using var lease = leaseFeature.Lease();
                 var canvas = lease?.SkCanvas;
                 if (canvas is null) return;
@@ -236,6 +234,4 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
             }
         }
     }
-
-
 }
