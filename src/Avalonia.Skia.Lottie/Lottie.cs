@@ -129,16 +129,22 @@ public class Lottie : Control
         var elemVisual = ElementComposition.GetElementVisual(this);
         var compositor = elemVisual?.Compositor;
         if (compositor is null) return;
-
         _customVisual = compositor.CreateCustomVisual(new SkottieCustomVisualHandler());
-
-        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-
         ElementComposition.SetElementChildVisual(this, _customVisual);
-
         LayoutUpdated += OnLayoutUpdated;
         
         base.OnLoaded();
+        
+        if (preloadPath is not null)
+        {
+            DisposeImpl();
+            Load(preloadPath);
+            _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
+            _customVisual.SendHandlerMessage(new SkottieCustomVisualHandler.Payload(SkottieCustomVisualHandler.Command.Update,
+                _animation, Stretch, StretchDirection));
+            Start();
+            preloadPath = null;
+        }
     }
 
     private void OnLayoutUpdated(object sender, EventArgs e)
@@ -172,15 +178,21 @@ public class Lottie : Control
         {
             case nameof(Path):
                 var path = change.GetNewValue<string?>();
-                Load(path);
-                Stop();
-                Start();
+
+                if (preloadPath is null && _customVisual is null)
+                {
+                    preloadPath = path;
+                    return;
+                }
+                
+                Load(path); 
                 break;
             case nameof(RepeatCount):
                 _repeatCount = change.GetNewValue<int>();
                 Stop();
                 Start();
                 break; 
+            
         }
     }
 
@@ -229,15 +241,19 @@ public class Lottie : Control
         return Load(assetStream);
     }
 
+    private string? preloadPath;
+    
     private void Load(string? path)
     {
+        Stop();
+        
         if (path is null)
         {
             DisposeImpl();
 
             return;
         }
-
+        
         DisposeImpl();
 
         try
@@ -249,6 +265,9 @@ public class Lottie : Control
                 return;
             }
 
+            InvalidateArrange();
+            InvalidateMeasure();
+            
             Start();
         }
         catch (Exception e)
