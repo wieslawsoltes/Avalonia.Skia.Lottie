@@ -108,6 +108,70 @@ public class Lottie : Control
         _baseUri = serviceProvider.GetContextBaseUri();
     }
 
+    /// <inheritdoc/>
+    protected override void OnLoaded()
+    {
+        base.OnLoaded();
+
+        var elemVisual = ElementComposition.GetElementVisual(this);
+        var compositor = elemVisual?.Compositor;
+        if (compositor is null)
+        {
+            return;
+        }
+        
+        _customVisual = compositor.CreateCustomVisual(new LottieCompositionCustomVisualHandler());
+        ElementComposition.SetElementChildVisual(this, _customVisual);
+
+        LayoutUpdated += OnLayoutUpdated;
+
+        if (_preloadPath is null)
+        {
+            return;
+        }
+
+        DisposeImpl();
+        Load(_preloadPath);
+
+        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
+        _customVisual.SendHandlerMessage(
+            new LottiePayload(
+                LottieCommand.Update,
+                _animation, 
+                Stretch, 
+                StretchDirection));
+        
+        Start();
+        _preloadPath = null;
+    }
+
+    protected override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        LayoutUpdated -= OnLayoutUpdated;
+
+        Stop();
+        DisposeImpl();
+    }
+
+    private void OnLayoutUpdated(object? sender, EventArgs e)
+    {
+        if (_customVisual == null)
+        {
+            return;
+        }
+
+        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
+        _customVisual.SendHandlerMessage(
+            new LottiePayload(
+                LottieCommand.Update, 
+                _animation, 
+                Stretch, 
+                StretchDirection));
+    }
+
+    /// <inheritdoc/>
     protected override Size MeasureOverride(Size availableSize)
     {
         if (_animation == null)
@@ -120,52 +184,6 @@ public class Lottie : Control
             : default;
 
         return Stretch.CalculateSize(availableSize, sourceSize, StretchDirection);
-    }
-
-    protected override void OnLoaded()
-    {
-        var elemVisual = ElementComposition.GetElementVisual(this);
-        var compositor = elemVisual?.Compositor;
-        if (compositor is null)
-        {
-            return;
-        }
-        
-        _customVisual = compositor.CreateCustomVisual(new LottieCustomVisualHandler());
-        ElementComposition.SetElementChildVisual(this, _customVisual);
-        LayoutUpdated += OnLayoutUpdated;
-
-        base.OnLoaded();
-
-        if (_preloadPath is null)
-        {
-            return;
-        }
-        
-        DisposeImpl();
-        Load(_preloadPath);
-        
-        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-        _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(
-            LottieCustomVisualHandler.Command.Update,
-            _animation, 
-            Stretch, 
-            StretchDirection));
-        
-        Start();
-        _preloadPath = null;
-    }
-
-    private void OnLayoutUpdated(object sender, EventArgs e)
-    {
-        if (_customVisual == null) return;
-        _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-        _customVisual.SendHandlerMessage(
-            new LottieCustomVisualHandler.Payload(
-                LottieCustomVisualHandler.Command.Update, 
-                _animation, 
-                Stretch, 
-                StretchDirection));
     }
 
     protected override Size ArrangeOverride(Size finalSize)
@@ -212,12 +230,6 @@ public class Lottie : Control
         }
     }
 
-    private void Stop()
-    {
-        _customVisual?.SendHandlerMessage(
-            new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Stop));
-    }
-
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
     {
         using var managedStream = new SKManagedStream(stream);
@@ -227,12 +239,13 @@ public class Lottie : Control
 
             Logger
                 .TryGet(LogEventLevel.Information, LogArea.Control)?
-                .Log(this,
-                    $"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
+                .Log(this, $"Version: {animation.Version} Duration: {animation.Duration} Fps:{animation.Fps} InPoint: {animation.InPoint} OutPoint: {animation.OutPoint}");
         }
         else
         {
-            Logger.TryGet(LogEventLevel.Warning, LogArea.Control)?.Log(this, "Failed to load animation.");
+            Logger
+                .TryGet(LogEventLevel.Warning, LogArea.Control)?
+                .Log(this, "Failed to load animation.");
         }
 
         return animation;
@@ -240,7 +253,9 @@ public class Lottie : Control
 
     private SkiaSharp.Skottie.Animation? Load(string path, Uri? baseUri)
     {
-        var uri = path.StartsWith("/") ? new Uri(path, UriKind.Relative) : new Uri(path, UriKind.RelativeOrAbsolute);
+        var uri = path.StartsWith("/") 
+            ? new Uri(path, UriKind.Relative) 
+            : new Uri(path, UriKind.RelativeOrAbsolute);
         if (uri.IsAbsoluteUri && uri.IsFile)
         {
             using var fileStream = File.OpenRead(uri.LocalPath);
@@ -264,7 +279,6 @@ public class Lottie : Control
         if (path is null)
         {
             DisposeImpl();
-
             return;
         }
 
@@ -274,6 +288,7 @@ public class Lottie : Control
         {
             _repeatCount = RepeatCount;
             _animation = Load(path, _baseUri);
+
             if (_animation is null)
             {
                 return;
@@ -286,21 +301,31 @@ public class Lottie : Control
         }
         catch (Exception e)
         {
-            Logger.TryGet(LogEventLevel.Warning, LogArea.Control)?.Log(this, "Failed to load animation: " + e);
+            Logger
+                .TryGet(LogEventLevel.Warning, LogArea.Control)?
+                .Log(this, "Failed to load animation: " + e);
             _animation = null;
         }
     }
 
-    private void DisposeImpl()
-    {
-        _customVisual?.SendHandlerMessage(
-            new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Dispose));
-    }
-
     private void Start()
     {
-        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Start,
-            _animation,
-            Stretch, StretchDirection, _repeatCount));
+        _customVisual?.SendHandlerMessage(
+            new LottiePayload(
+                LottieCommand.Start,
+                _animation,
+                Stretch, 
+                StretchDirection, 
+                _repeatCount));
+    }
+
+    private void Stop()
+    {
+        _customVisual?.SendHandlerMessage(new LottiePayload(LottieCommand.Stop));
+    }
+
+    private void DisposeImpl()
+    {
+        _customVisual?.SendHandlerMessage(new LottiePayload(LottieCommand.Dispose));
     }
 }

@@ -6,7 +6,7 @@ using SkiaSharp;
 
 namespace Avalonia.Skia.Lottie;
 
-internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
+internal class LottieCompositionCustomVisualHandler : CompositionCustomVisualHandler
 {
     private TimeSpan _primaryTimeElapsed, _animationElapsed;
     private TimeSpan? _lastServerTime;
@@ -19,35 +19,24 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
     private int _repeatCount;
     private int _count;
 
-    public enum Command
-    {
-        Start,
-        Stop,
-        Update,
-        Dispose
-    }
-
-    public record struct Payload(
-        Command Command,
-        SkiaSharp.Skottie.Animation? Animation = null,
-        Stretch? Stretch = null,
-        StretchDirection? StretchDirection = null,
-        int? RepeatCount = null);
-
     public override void OnMessage(object message)
     {
-        if (message is not Payload msg) return;
+        if (message is not LottiePayload msg)
+        {
+            return;
+        }
 
         switch (msg)
         {
             case
             {
-                Command: Command.Start,
+                LottieCommand: LottieCommand.Start,
                 Animation: { } an,
                 Stretch: { } st,
                 StretchDirection: { } sd,
                 RepeatCount: { } rp
             }:
+            {
                 _running = true;
                 _lastServerTime = null;
                 _stretch = st;
@@ -58,24 +47,37 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
                 _animationElapsed = TimeSpan.Zero;
                 RegisterForNextAnimationFrameUpdate();
                 break;
+            }
             case
             {
-                Command: Command.Update,
+                LottieCommand: LottieCommand.Update,
                 Stretch: { } st,
                 StretchDirection: { } sd
             }:
+            {
                 _stretch = st;
                 _stretchDirection = sd;
                 RegisterForNextAnimationFrameUpdate();
                 break;
-            case {Command: Command.Stop}:
+            }
+            case
+            {
+                LottieCommand: LottieCommand.Stop
+            }:
+            {
                 _running = false;
                 _animationElapsed = TimeSpan.Zero;
                 _count = 0;
                 break;
-            case {Command: Command.Dispose}:
+            }
+            case
+            {
+                LottieCommand: LottieCommand.Dispose
+            }:
+            {
                 DisposeImpl();
                 break;
+            }
         }
     }
 
@@ -94,7 +96,6 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
         Invalidate();
         RegisterForNextAnimationFrameUpdate();
     }
-
 
     private void DisposeImpl()
     {
@@ -128,7 +129,7 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
         return frameTime;
     }
 
-    private void SkottieDraw(SKCanvas canvas)
+    private void Draw(SKCanvas canvas)
     {
         var animation = _animation;
         if (animation is null)
@@ -158,14 +159,8 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
         var dst = new SKRect(0, 0, animation.Size.Width, animation.Size.Height);
 
         animation.SeekFrameTime(t, ic);
-
-        // Debug.WriteLine($"dst: {dst}, ic.Bounds: {ic.Bounds}");
-
         canvas.Save();
-
         animation.Render(canvas, dst);
-        // canvas.DrawRect(ic.Bounds, new SKPaint { Color = SKColors.Magenta, Style = SKPaintStyle.Stroke, StrokeWidth = 1 });
-
         canvas.Restore();
 
         ic.Reset();
@@ -187,8 +182,12 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
                 _lastServerTime = CompositionNow;
             }
 
-
-            if (_animation is not { } an || _stretch is not { } st || _stretchDirection is not { } sd) return;
+            if (_animation is not { } an 
+                || _stretch is not { } st 
+                || _stretchDirection is not { } sd)
+            {
+                return;
+            }
 
 
             var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
@@ -231,7 +230,7 @@ internal class LottieCustomVisualHandler : CompositionCustomVisualHandler
                 {
                     return;
                 }
-                SkottieDraw(canvas);
+                Draw(canvas);
             }
         }
     }
