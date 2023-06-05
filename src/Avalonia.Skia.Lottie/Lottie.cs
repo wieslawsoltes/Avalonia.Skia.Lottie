@@ -132,15 +132,16 @@ public class Lottie : Control
         _customVisual = compositor.CreateCustomVisual(new LottieCustomVisualHandler());
         ElementComposition.SetElementChildVisual(this, _customVisual);
         LayoutUpdated += OnLayoutUpdated;
-        
+
         base.OnLoaded();
-        
+
         if (preloadPath is not null)
         {
             DisposeImpl();
             Load(preloadPath);
             _customVisual.Size = new Vector2((float)Bounds.Size.Width, (float)Bounds.Size.Height);
-            _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Update,
+            _customVisual.SendHandlerMessage(new LottieCustomVisualHandler.Payload(
+                LottieCustomVisualHandler.Command.Update,
                 _animation, Stretch, StretchDirection));
             Start();
             preloadPath = null;
@@ -173,7 +174,7 @@ public class Lottie : Control
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        
+
         switch (change.Property.Name)
         {
             case nameof(Path):
@@ -184,21 +185,21 @@ public class Lottie : Control
                     preloadPath = path;
                     return;
                 }
-                
-                Load(path); 
+
+                Load(path);
                 break;
             case nameof(RepeatCount):
                 _repeatCount = change.GetNewValue<int>();
                 Stop();
                 Start();
-                break; 
-            
+                break;
         }
     }
 
     private void Stop()
     {
-        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Stop));
+        _customVisual?.SendHandlerMessage(
+            new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Stop));
     }
 
     private SkiaSharp.Skottie.Animation? Load(Stream stream)
@@ -242,18 +243,18 @@ public class Lottie : Control
     }
 
     private string? preloadPath;
-    
+
     private void Load(string? path)
     {
         Stop();
-        
+
         if (path is null)
         {
             DisposeImpl();
 
             return;
         }
-        
+
         DisposeImpl();
 
         try
@@ -267,7 +268,7 @@ public class Lottie : Control
 
             InvalidateArrange();
             InvalidateMeasure();
-            
+
             Start();
         }
         catch (Exception e)
@@ -279,12 +280,14 @@ public class Lottie : Control
 
     private void DisposeImpl()
     {
-        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Dispose));
+        _customVisual?.SendHandlerMessage(
+            new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Dispose));
     }
 
     private void Start()
     {
-        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Start, _animation,
+        _customVisual?.SendHandlerMessage(new LottieCustomVisualHandler.Payload(LottieCustomVisualHandler.Command.Start,
+            _animation,
             Stretch, StretchDirection, _repeatCount));
     }
 }
