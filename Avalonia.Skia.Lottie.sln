@@ -17,8 +17,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{221169E3-B43C-4E97-8B5E-D070B3FCD4FF}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
-		global.json = global.json
 		nuget.config = nuget.config
+		global.json = global.json
 	EndProjectSection
 EndProject
 Global
