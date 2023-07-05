@@ -2,8 +2,7 @@
 
 namespace LottieDemo.ViewModels;
 
-[ObservableObject]
-public partial class AssetViewModel
+public partial class AssetViewModel : ObservableObject
 {
     [ObservableProperty] private string _name;
     [ObservableProperty] private string _path;
@@ -14,5 +13,5 @@ public partial class AssetViewModel
         _path = path;
     }
 
-    public override string ToString() => _name;
+    public override string ToString() => Name;
 }
