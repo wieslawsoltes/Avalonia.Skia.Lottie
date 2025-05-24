@@ -5,7 +5,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Avalonia.Skia.Lottie.svg)](https://www.nuget.org/packages/Avalonia.Skia.Lottie)
 [![NuGet](https://img.shields.io/nuget/dt/Avalonia.Skia.Lottie.svg)](https://www.nuget.org/packages/Avalonia.Skia.Lottie)
 
-An lottie animation player control for Avalonia.
+A lottie animation player control for Avalonia.
 
 ## Usage
 

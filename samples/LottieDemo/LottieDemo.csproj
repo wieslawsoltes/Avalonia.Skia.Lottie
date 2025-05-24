@@ -19,6 +19,6 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Avalonia.Skia.Lottie\Avalonia.Skia.Lottie.csproj" />
+    <ProjectReference Include="..\..\src\Lottie\Lottie.csproj" />
   </ItemGroup>
 </Project>

@@ -10,7 +10,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <Description>An lottie animation player control for Avalonia.</Description>
-    <PackageId>Avalonia.Skia.Lottie</PackageId>
+    <PackageId>Lottie</PackageId>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>lottie;animation;player;vector graphics;rendering;2d;graphics;geometry;shapes;skiasharp;skia;skottie;control;avalonia;avaloniaui</PackageTags>
   </PropertyGroup>

@@ -4,7 +4,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{63AB3979-8A6
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{BB17F9CC-92ED-43AD-B21E-3AFECEFE0AD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Skia.Lottie", "src\Avalonia.Skia.Lottie\Avalonia.Skia.Lottie.csproj", "{DAE98D56-C766-4B9C-BEE4-947D72897D46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lottie", "src\Lottie\Lottie.csproj", "{DAE98D56-C766-4B9C-BEE4-947D72897D46}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LottieDemo", "samples\LottieDemo\LottieDemo.csproj", "{B5D2A1C7-8DB5-4825-B44B-5B1B780FE094}"
 EndProject
