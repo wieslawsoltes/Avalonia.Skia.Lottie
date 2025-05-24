@@ -1,9 +1,9 @@
-# Avalonia.Skia.Lottie
+# Lottie
 
 [![CI](https://github.com/wieslawsoltes/Avalonia.Skia.Lottie/actions/workflows/build.yml/badge.svg)](https://github.com/wieslawsoltes/Avalonia.Skia.Lottie/actions/workflows/build.yml)
 
-[![NuGet](https://img.shields.io/nuget/v/Avalonia.Skia.Lottie.svg)](https://www.nuget.org/packages/Avalonia.Skia.Lottie)
-[![NuGet](https://img.shields.io/nuget/dt/Avalonia.Skia.Lottie.svg)](https://www.nuget.org/packages/Avalonia.Skia.Lottie)
+[![NuGet](https://img.shields.io/nuget/v/Lottie.svg)](https://www.nuget.org/packages/Lottie)
+[![NuGet](https://img.shields.io/nuget/dt/Lottie.svg)](https://www.nuget.org/packages/Lottie)
 
 A lottie animation player control for Avalonia.
 
@@ -22,4 +22,4 @@ A lottie animation player control for Avalonia.
 
 ## License
 
-Avalonia.Skia.Lottie is licensed under the [MIT license](LICENSE.TXT).
+Lottie is licensed under the [MIT license](LICENSE.TXT).
